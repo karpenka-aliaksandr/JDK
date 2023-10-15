@@ -11,16 +11,17 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.JScrollPane;
 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-public class ServerWindow extends JFrame{
+public class ServerWindow extends JFrame {
     private static final int WINDOW_HEIGHT = 300;
     private static final int WINDOW_WIDTH = 400;
-    private static final int WINDOW_POSX = 500;
-    private static final int WINDOW_POSY = 550;
+    private static final int WINDOW_POSX = 1300;// по горизонтали от левой стороны
+    private static final int WINDOW_POSY = 1000;// по вертикали от верха
     private JPanel panBottom;
     private JButton btnStart, btnStop;
     private JTextArea taLog;
@@ -28,8 +29,7 @@ public class ServerWindow extends JFrame{
     private Server server;
     private ServerWindow sw;
 
-    
-    public ServerWindow(){
+    public ServerWindow() {
         sw = this;
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setBounds(WINDOW_POSX, WINDOW_POSY, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -41,55 +41,33 @@ public class ServerWindow extends JFrame{
         taLog.setEditable(false);
         taLog.setLineWrap(true);
         taLog.setWrapStyleWord(true);
-        sp = new JScrollPane(taLog, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        sp = new JScrollPane(taLog, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(sp);
         addListeners();
+        server = new Server(sw);
         setVisible(true);
     }
 
     private void addListeners() {
-        
+
         btnStart.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (server == null) {
-                    server = new Server(sw);
-                }
-                server.up();
+                server.btnStartClick();
             }
         });
-        
+
         btnStop.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (server != null) {
-                    if (server.down()) server = null;    
-                } else {
-                    addTotaLog("The server has already stopped.");
-                }
+                server.btnStopClick();
             }
-        });
-        
-        taLog.getDocument().addDocumentListener(new DocumentListener(){
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMaximum());
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-            }
-         
         });
     }
 
     private JComponent getPanelBottom() {
-        panBottom = new JPanel(new GridLayout(1,2));
+        panBottom = new JPanel(new GridLayout(1, 2));
         btnStart = new JButton("Start");
         btnStop = new JButton("Stop");
         panBottom.add(btnStart);
@@ -97,9 +75,10 @@ public class ServerWindow extends JFrame{
         return panBottom;
     }
 
-    public void addTotaLog(String text){
+    public void addTotaLog(String text) {
         taLog.append(text + "\n");
+        SwingUtilities.invokeLater(() -> {
+            sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMaximum());
+        });
     }
 }
-
-    

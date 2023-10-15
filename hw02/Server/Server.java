@@ -4,111 +4,109 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class Server extends Thread {
+public class Server {
     private ServerWindow serverWindow;
-    private ServerSocket serverSocket = null;
-    private Socket connection = null;
-    private final int PORT = 9999;
+    private Repository repository;
     private boolean isServerWorking;
-    private LinkedList<ConnectionToClient> listClientConnection = new LinkedList<>();
+    private LinkedList<ConnectionToClientThread> listConnectionToClientThread = new LinkedList<>();
+    private ServerSocketThread serverSocketThread;
+    private ConnectionToClientThread connectionToClientThread;
+
+
     
     Server(ServerWindow serverWindow){
         this.isServerWorking = false;
         this.serverWindow = serverWindow;
+        // File file = new File("/hw02/Server/history");
+        // System.out.println(file);
+        repository = new Repository("hw02/Server/history");
     }
 
-    @Override
-    public void run() {
-        try{
-            System.out.println("RUN");
-            serverSocket = new ServerSocket(PORT);
-            isServerWorking = true;
-            while(true){
-                try{
-                    connection = serverSocket.accept();
-                    listClientConnection.add(new ConnectionToClient(connection, serverWindow, this));
-                }catch(IOException ex){
-                    if (connection!=null) connection.close();
-                }
+    public void btnStartClick(){
+        if (isServerWorking) {
+            addTotaLog("The server has already started.");
+        } else {
+            try {
+                serverSocketThread = new ServerSocketThread(this);
+                serverSocketThread.start();
+                isServerWorking = true;
+            } catch (Exception e) {
+                addTotaLog("The server could not start.");
+                e.getMessage();
             }
-        }catch(IOException e){
-            e.getMessage();
-        }
-        finally{
-            close();
         }
     }
 
-    public void closeConnection(){
-        for(ConnectionToClient ss : listClientConnection){
-            ss.close();
-        }
-    }
-    public void close(){
-        try{
+    public void btnStopClick(){
+        if (isServerWorking) {
             isServerWorking = false;
-            serverSocket.close();
-        }
-        catch(IOException e){
-            e.getMessage();
+            serverSocketThread.interrupt();
+            stopAllConnectionToClient();
+            addTotaLog("The server stopped.");  
+        } else {
+            addTotaLog("The server has already stopped.");
         }
     }
-    public void showMessage(String message){
-        serverWindow.addTotaLog(message);
+
+    public void receivedMessage(String message){
+        addTotaLog(message);
+        sendMessageToAll(message);
     }
+    private void sendMessageToAll(String message){
+        for (ConnectionToClientThread connectionToClientThread : listConnectionToClientThread) {
+            connectionToClientThread.sendMessage(message);
+        }
+        repository.writeToFile(message);
+    }
+    
+    public void startConnectionToClient(Socket socket){
+        try{
+            connectionToClientThread = new ConnectionToClientThread(this, socket);
+            connectionToClientThread.start();     
+            listConnectionToClientThread.add(connectionToClientThread);
+            String message = repository.readFile();
+            if (message != null) connectionToClientThread.sendMessage(message);
+            addTotaLog("Присоединился клиент.");
+            System.out.println("Присоединился клиент."); 
+            System.out.println("listConnectionToClientThread = " + listConnectionToClientThread);   
+        } catch (Exception e) {
+            System.out.println("Server Соединение не создалось ClientConnection");
+        }   
+    }
+    public void interruptConnectionToClientThread(ConnectionToClientThread connectionToClientThread){
+        System.out.println("Server interruptConnectionToClientThread: " + connectionToClientThread);
+        if (listConnectionToClientThread.remove(connectionToClientThread)) {
+            System.out.println(connectionToClientThread);
+            connectionToClientThread.interrupt();
+            try {
+                serverWindow.addTotaLog("Клиент отключен.");
+            } catch (Exception e) {
+                System.out.println("не вывелось сообщение Клиент отключен.");
+            }
+        }  
+    }
+    public void stopAllConnectionToClient(){
+        //System.out.println("listConnectionToClientThread = " + listConnectionToClientThread);
+        while (!listConnectionToClientThread.isEmpty()){
+            connectionToClientThread = listConnectionToClientThread.getFirst();
+            interruptConnectionToClientThread(connectionToClientThread);    
+            //System.out.println("Server Соединение разорвал соединение с клиентом:" + connectionToClientThread);
+        }
+        System.out.println("Server Соединение разорвал все соединения");
+        System.out.println("listConnectionToClientThread = " + listConnectionToClientThread);;
+    }  
+
+    public void addTotaLog(String text){
+        serverWindow.addTotaLog(text);
+    }
+
+    
+
+   
 
     public boolean getServerStatus(){
         return isServerWorking;
     }
-
-    public void up(){
-        if (!getServerStatus()) {
-            try {
-                System.out.println("UP");
-                start();
-                System.out.println("UP after start");
-                serverWindow.addTotaLog("Server started");//(String.format("Server started. Address: %s, port: %s", serverSocket.getLocalSocketAddress(), PORT));
-                setServerStatus(true);
-            } catch (Exception ex) {
-               ex.printStackTrace();
-               serverWindow.addTotaLog("The server could not start.");
-            }
-        } else {
-            serverWindow.addTotaLog("The server has already started.");
-        }
-    }
-
-    public boolean down(){
-        if (getServerStatus()) {
-            try {
-                System.out.println("DOWN");
-                closeConnection();
-                close();
-                setServerStatus(false);
-                serverWindow.addTotaLog("Server stopped.");
-                return true;
-            } catch (Exception ex) {
-               ex.printStackTrace();
-               serverWindow.addTotaLog("The server couldn't stop.");
-               return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    
-    private void setServerStatus(boolean status){
-        isServerWorking = status;
-    }
-
-    public void sendMessageAll(String message){
-        for(ConnectionToClient ss : listClientConnection){
-            ss.sendMessage(message);
-        }
-    }
-
-    public void sendMessageToClient(String message){
-
-    }
-
 }
+
+    

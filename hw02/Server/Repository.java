@@ -3,36 +3,51 @@ package Server;
 import java.io.*;
 
 public class Repository {
-    private final String PATH = "JDK/hw01/Server/history";
-    public void writeToFile(String userData){
-        try{
-            File file = new File(PATH);
-            StringBuilder sb = new StringBuilder();
-            if(!file.exists()){
+    private String path;
+    private File file;
+
+    public Repository(String path) {
+        this.path = path;
+        file = new File(path);
+        if (!file.exists()) {
+            try {
                 file.createNewFile();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                System.out.println(file.getAbsolutePath());
+                e.printStackTrace();
             }
-            sb.append(userData);
+        }
+
+    }
+
+    public void writeToFile(String Data) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append(Data);
             sb.append(System.lineSeparator());
             BufferedWriter bw = new BufferedWriter(new FileWriter(file.getAbsolutePath(), true));
             bw.write(sb.toString());
             bw.close();
-        }catch(IOException ex){
+        } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
     }
-    public String readFile(){
 
-        try(BufferedReader br = new BufferedReader(new FileReader(PATH))){
+    public String readFile() {
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             StringBuilder sb = new StringBuilder();
             String userData = br.readLine();
-            while(userData != null){
+            while (userData != null) {
                 sb.append(userData);
-                sb.append(System.lineSeparator());
                 userData = br.readLine();
+                if (userData != null) {
+                    sb.append(System.lineSeparator());
+                }
             }
             return sb.toString();
-        }catch(IOException ex){
-            System.out.println("Файла не существует");
+        } catch (IOException ex) {
+            System.out.println("Файла не существует" + file);
             return null;
         }
     }
