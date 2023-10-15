@@ -14,9 +14,6 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.JScrollPane;
 
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-
 public class ServerWindow extends JFrame {
     private static final int WINDOW_HEIGHT = 300;
     private static final int WINDOW_WIDTH = 400;

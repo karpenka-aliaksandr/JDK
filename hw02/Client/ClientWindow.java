@@ -16,8 +16,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 
@@ -111,24 +109,6 @@ public class ClientWindow extends JFrame {
                         pfPassword.getPassword());
             }
         });
-
-        // taLog.getDocument().addDocumentListener(new DocumentListener(){
-
-        // @Override
-        // public void insertUpdate(DocumentEvent e) {
-        // sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMaximum());
-        // }
-
-        // @Override
-        // public void removeUpdate(DocumentEvent e) {
-        // }
-
-        // @Override
-        // public void changedUpdate(DocumentEvent e) {
-        // }
-
-        // });
-
     }
 
     private JPanel getPanelTop() {

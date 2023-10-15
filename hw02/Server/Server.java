@@ -1,6 +1,5 @@
 package Server;
 
-import java.io.*;
 import java.net.*;
 import java.util.*;
 
@@ -17,8 +16,6 @@ public class Server {
     Server(ServerWindow serverWindow){
         this.isServerWorking = false;
         this.serverWindow = serverWindow;
-        // File file = new File("/hw02/Server/history");
-        // System.out.println(file);
         repository = new Repository("hw02/Server/history");
     }
 
